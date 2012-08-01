@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+AUTOTEST_ROOT=/var/www/autotest
+
+DB_FILE="${AUTOTEST_ROOT}/check-update.db"
+
+VERSION_RELEASE=$(wget -q -O- "http://eec.corp.anakeen.com/anakeen/repo/integration/3.2/webinst/content.xml" | sed -n -e 's/.*<module name="dynacase-platform-.* version="\([0-9][0-9.]*\)" release="\([0-9][0-9.]*\)".*/\1-\2/p' | head -1)
+
+LAST_VERSION_RELEASE=""
+if [ -f "${DB_FILE}" ]; then
+	LAST_VERSION_RELEASE=$(head -1 "${DB_FILE}")
+fi
+
+if [ "${VERSION_RELEASE}" = "${LAST_VERSION_RELEASE}" ]; then
+	exit 0
+fi
+
+echo "${VERSION_RELEASE}" > "${DB_FILE}"
+"${AUTOTEST_ROOT}/test"

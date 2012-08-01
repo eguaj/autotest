@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$CONTEXT_NAME" ]; then
+	echo "Missing CONTEXT_NAME environment variable!"
+	exit 1
+fi
+
+cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
+<?xml version="1.0"?>
+<contexts>
+  <context name="${CONTEXT_NAME}" root="${AUTOTEST_ROOT}/${CONTEXT_NAME}" url="" register="unregistered">
+    <description/>
+    <modules>
+    </modules>
+    <repositories>
+      <access use="32"/>
+    </repositories>
+  </context>
+</contexts>
+EOF
+
+if [ -d "${AUTOTEST_ROOT}/${CONTEXT_NAME}" ]; then
+	rm -Rf "${AUTOTEST_ROOT}/${CONTEXT_NAME}"
+fi
+mkdir -p "${AUTOTEST_ROOT}/${CONTEXT_NAME}"
+chown www-data: "${AUTOTEST_ROOT}/${CONTEXT_NAME}"
+
+PGSERVICE=${CONTEXT_NAME} psql -f - <<EOF
+DROP SCHEMA "public" CASCADE;
+CREATE SCHEMA "public";
+DROP SCHEMA "family" CASCADE;
+DROP SCHEMA "dav" CASCADE;
+EOF
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform-test
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec "$(which phpunit)" --stop-on-error DCPTEST/PU_dcp.php

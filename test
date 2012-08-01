@@ -1,0 +1,33 @@
+#!/bin/bash
+
+SETUID=33
+AUTOTEST_RUN="3.2+pg91 3.2+pg84"
+AUTOTEST_ROOT=/var/www/autotest
+
+if [ "$(id -u)" != "${SETUID}" ]; then
+	printf "Script must be run under UID '%s'.\n" "${SETUID}"
+	exit 1
+fi
+
+export AUTOTEST_ROOT
+
+echo $$ >> "${AUTOTEST_ROOT}/run.lock"
+LOCK_PID=$(head -1 "${AUTOTEST_ROOT}/run.lock")
+if [ "${LOCK_PID}" != "$$" ]; then
+	printf "Process already running with PID '%s'.\n" "${LOCK_PID}"
+	exit 2
+fi
+
+for RUNID in $AUTOTEST_RUN; do
+	TS=$(date +%Y-%m-%dT%H:%M:%S)
+	OUTPUT="${AUTOTEST_ROOT}/run_${RUNID}_${TS}.log"
+
+	"${AUTOTEST_ROOT}/run_${RUNID}" > "$OUTPUT" 2>&1
+	RET=$?
+	if [ $RET -ne 0 ]; then
+		echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/pu.db"
+	else
+		echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/pu.db"
+	fi
+done
+rm "${AUTOTEST_ROOT}/run.lock"
