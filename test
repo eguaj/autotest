@@ -3,6 +3,7 @@
 SETUID=33
 AUTOTEST_RUN="3.2+pg91 3.2+pg84"
 AUTOTEST_ROOT=/var/www/autotest
+AUTOTEST_ADDON_INSTALL=""
 
 if [ "$(id -u)" != "${SETUID}" ]; then
 	printf "Script must be run under UID '%s'.\n" "${SETUID}"
@@ -10,6 +11,7 @@ if [ "$(id -u)" != "${SETUID}" ]; then
 fi
 
 export AUTOTEST_ROOT
+export AUTOTEST_ADDON_INSTALL
 
 echo $$ >> "${AUTOTEST_ROOT}/run.lock"
 LOCK_PID=$(head -1 "${AUTOTEST_ROOT}/run.lock")

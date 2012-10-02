@@ -37,3 +37,9 @@ EOF
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform-test
 
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec "$(which phpunit)" --stop-on-error DCPTEST/PU_dcp.php
+
+if [ -n "$AUTOTEST_ADDON_INSTALL" ]; then
+	for MODULE in $AUTOTEST_ADDON_INSTALL; do
+		"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
+	done
+fi
