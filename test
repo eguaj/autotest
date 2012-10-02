@@ -18,11 +18,15 @@ if [ "${LOCK_PID}" != "$$" ]; then
 	exit 2
 fi
 
+function timestamplog {
+	perl -MPOSIX -ne 'BEGIN{select STDOUT;$|=1;$ts=time()}printf("%s +%s %s",strftime("%Y-%m-%dT%H:%M:%S",localtime()),time()-$ts,$_);'
+}
+
 for RUNID in $AUTOTEST_RUN; do
 	TS=$(date +%Y-%m-%dT%H:%M:%S)
 	OUTPUT="${AUTOTEST_ROOT}/run_${RUNID}_${TS}.log"
 
-	"${AUTOTEST_ROOT}/run_${RUNID}" > "$OUTPUT" 2>&1
+	"${AUTOTEST_ROOT}/run_${RUNID}" 2>&1 | timestamplog > "$OUTPUT"
 	RET=$?
 	if [ $RET -ne 0 ]; then
 		echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/pu.db"
