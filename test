@@ -28,12 +28,14 @@ for RUNID in $AUTOTEST_RUN; do
 	TS=$(date +%Y-%m-%dT%H:%M:%S)
 	OUTPUT="${AUTOTEST_ROOT}/run_${RUNID}_${TS}.log"
 
-	"${AUTOTEST_ROOT}/run_${RUNID}" 2>&1 | timestamplog > "$OUTPUT"
-	RET=$?
-	if [ $RET -ne 0 ]; then
-		echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/pu.db"
-	else
-		echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/pu.db"
-	fi
+	(
+		"${AUTOTEST_ROOT}/run_${RUNID}"
+		RET=$?
+		if [ $RET -ne 0 ]; then
+			echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/pu.db"
+		else
+			echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/pu.db"
+		fi
+	) 2>&1 | timestamplog > "$OUTPUT"
 done
 rm "${AUTOTEST_ROOT}/run.lock"

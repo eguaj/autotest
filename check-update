@@ -6,16 +6,16 @@ AUTOTEST_ROOT=/var/www/autotest
 
 DB_FILE="${AUTOTEST_ROOT}/check-update.db"
 
-VERSION_RELEASE=$(wget -q -O- "http://eec.corp.anakeen.com/anakeen/repo/integration/3.2/webinst/content.xml" | sed -n -e 's/.*<module name="dynacase-platform-.* version="\([0-9][0-9.]*\)" release="\([0-9][0-9.]*\)".*/\1-\2/p' | head -1)
+LAST_MODIFIED=$(wget -q -S -O - http://eec.corp.anakeen.com/anakeen/repo/integration/3.2/webinst/content.xml 2>&1 | sed -n -e 's/^ *Last-Modified: \(.*\)$/\1/p' | head -1)
 
-LAST_VERSION_RELEASE=""
+PREV_LAST_MODIFIED=""
 if [ -f "${DB_FILE}" ]; then
-	LAST_VERSION_RELEASE=$(head -1 "${DB_FILE}")
+	PREV_LAST_MODIFIED=$(head -1 "${DB_FILE}")
 fi
 
-if [ "${VERSION_RELEASE}" = "${LAST_VERSION_RELEASE}" ]; then
+if [ "${LAST_MODIFIED}" = "${PREV_LAST_MODIFIED}" ]; then
 	exit 0
 fi
 
-echo "${VERSION_RELEASE}" > "${DB_FILE}"
+echo "${LAST_MODIFIED}" > "${DB_FILE}"
 "${AUTOTEST_ROOT}/test"
