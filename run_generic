@@ -34,7 +34,7 @@ DROP SCHEMA "family" CASCADE;
 DROP SCHEMA "dav" CASCADE;
 EOF
 
-"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform-test
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
 
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec "$(which phpunit)" --stop-on-error DCPTEST/PU_dcp.php
 
