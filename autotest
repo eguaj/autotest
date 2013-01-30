@@ -36,18 +36,35 @@ if [ ! -t 0 ]; then
 	REDIR_NULL="> /dev/null"
 fi
 
-for RUNID in $AUTOTEST_RUN; do
-	TS=$(date +%Y-%m-%dT%H:%M:%S)
-	OUTPUT="${AUTOTEST_ROOT}/logs/run_${RUNID}_${TS}.log"
+function install_control {
+	mkdir -p "${AUTOTEST_ROOT}/dynacase-control"
+	wget -O - http://eec.corp.anakeen.com/anakeen/repo/integration/3.2/tarball/dynacase-control-current.tar.gz | tar -C "${AUTOTEST_ROOT}/dynacase-control" -zxf - --strip-components 1
+}
 
-	(
-		"${AUTOTEST_ROOT}/run_${RUNID}"
-		RET=$?
-		if [ $RET -ne 0 ]; then
-			echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/logs/pu.db"
-		else
-			echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
-		fi
-	) 2>&1 | timestamplog | tee "$OUTPUT" $REDIR_NULL
-done
+function autotest_run {
+	for RUNID in $AUTOTEST_RUN; do
+		TS=$(date +%Y-%m-%dT%H:%M:%S)
+		OUTPUT="${AUTOTEST_ROOT}/logs/run_${RUNID}_${TS}.log"
+
+		(
+			"${AUTOTEST_ROOT}/run_${RUNID}"
+			RET=$?
+			if [ $RET -ne 0 ]; then
+				echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/logs/pu.db"
+			else
+				echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
+			fi
+		) 2>&1 | timestamplog | tee "$OUTPUT" $REDIR_NULL
+	done
+}
+
+case "$1" in
+	"install-control")
+		install_control
+		;;
+	*)
+		autotest_run
+		;;
+esac
+
 rm "${AUTOTEST_ROOT}/autotest.lock"
