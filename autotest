@@ -1,9 +1,12 @@
 #!/bin/bash
 
 SETUID=33
-AUTOTEST_RUN="3.2+pg91 3.2+pg84"
 AUTOTEST_ROOT=/var/www/autotest
-AUTOTEST_ADDON_INSTALL=""
+AUTOTEST_RUN=""
+
+if [ -f "$AUTOTEST_ROOT/autotest.conf" ]; then
+	. "$AUTOTEST_ROOT/autotest.conf"
+fi
 
 if [ "$(id -u)" != "${SETUID}" ]; then
 	printf "Script must be run under UID '%s'.\n" "${SETUID}"
@@ -13,8 +16,12 @@ fi
 export AUTOTEST_ROOT
 export AUTOTEST_ADDON_INSTALL
 
-echo $$ >> "${AUTOTEST_ROOT}/run.lock"
-LOCK_PID=$(head -1 "${AUTOTEST_ROOT}/run.lock")
+if [ ! -d "${AUTOTEST_ROOT}/logs" ]; then
+	mkdir -p "${AUTOTEST_ROOT}/logs"
+fi
+
+echo $$ >> "${AUTOTEST_ROOT}/autotest.lock"
+LOCK_PID=$(head -1 "${AUTOTEST_ROOT}/autotest.lock")
 if [ "${LOCK_PID}" != "$$" ]; then
 	printf "Process already running with PID '%s'.\n" "${LOCK_PID}"
 	exit 2
@@ -24,18 +31,23 @@ function timestamplog {
 	perl -MPOSIX -ne 'BEGIN{select STDOUT;$|=1;$ts=time()}printf("%s +%s %s",strftime("%Y-%m-%dT%H:%M:%S",localtime()),time()-$ts,$_);'
 }
 
+REDIR_NULL=""
+if [ ! -t 0 ]; then
+	REDIR_NULL="> /dev/null"
+fi
+
 for RUNID in $AUTOTEST_RUN; do
 	TS=$(date +%Y-%m-%dT%H:%M:%S)
-	OUTPUT="${AUTOTEST_ROOT}/run_${RUNID}_${TS}.log"
+	OUTPUT="${AUTOTEST_ROOT}/logs/run_${RUNID}_${TS}.log"
 
 	(
 		"${AUTOTEST_ROOT}/run_${RUNID}"
 		RET=$?
 		if [ $RET -ne 0 ]; then
-			echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/pu.db"
+			echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/logs/pu.db"
 		else
-			echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/pu.db"
+			echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
 		fi
-	) 2>&1 | timestamplog > "$OUTPUT"
+	) 2>&1 | timestamplog | tee "$OUTPUT" $REDIR_NULL
 done
-rm "${AUTOTEST_ROOT}/run.lock"
+rm "${AUTOTEST_ROOT}/autotest.lock"

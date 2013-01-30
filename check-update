@@ -18,4 +18,4 @@ if [ "${LAST_MODIFIED}" = "${PREV_LAST_MODIFIED}" ]; then
 fi
 
 echo "${LAST_MODIFIED}" > "${DB_FILE}"
-"${AUTOTEST_ROOT}/test"
+"${AUTOTEST_ROOT}/autotest"

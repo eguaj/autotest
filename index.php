@@ -12,7 +12,7 @@ span.succeeded {
 </style>
 <body>
 <?
-$db = fopen('pu.db', 'r');
+$db = fopen('logs/pu.db', 'r');
 if ($db === false) {
 	print sprintf("<h1>Error opening 'pu.db' for reading.</h1>\n");
 	exit(1);
@@ -32,7 +32,7 @@ for ($i = 0; $i < count($lines); $i++) {
 	}
 	$url = urlencode(sprintf("run_%s_%s.log", $m['runid'], $m['time']));
 	$status_class = ($m['status'] == 'FAILED') ? 'failed' : 'succeeded';
-	print sprintf("<li>%s <a href=\"%s\">%s</a> <span class=\"%s\">%s</span></li>\n", $m['time'], $url, $m['runid'], $status_class, $m['status']);
+	print sprintf("<li>%s <a href=\"logs/%s\">%s</a> <span class=\"%s\">%s</span></li>\n", $m['time'], $url, $m['runid'], $status_class, $m['status']);
 }
 print "</ul>\n";
 ?>

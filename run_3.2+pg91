@@ -1,5 +1,0 @@
-#!/bin/bash
-
-set -e
-
-CONTEXT_NAME="autopg91" "${AUTOTEST_ROOT}/run_generic"
