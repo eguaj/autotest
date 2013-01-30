@@ -1,16 +1,46 @@
+<?php
+
+$pid = file_get_contents("autotest.lock");
+$isRunning = ($pid !== false);
+$error = '';
+
+if (isset($_REQUEST['rerun'])) {
+	if ($isRunning) {
+		$error = sprintf("Autotest already running (pid = %s)", $pid);
+	}
+	system("./autotest < /dev/null > /dev/null 2>&1 &");
+	header('Location: ' . $_SERVER['PHP_SELF']);
+	exit(0);
+}
+?>
 <!DOCTYPE HTML>
 <html>
 <head>
 <title>autotest :: automated PU test report</title>
 <style>
-span.failed {
+body {
+	font-family: sans-serif;
+}
+.failed {
 	color: red;
 }
-span.succeeded {
+.succeeded {
 	color: green;
 }
 </style>
 <body>
+<div class="failed">
+<pre>
+<?php	print(htmlspecialchars($error)) ?>
+</pre>
+</div>
+<?php	if (!$isRunning) { ?>
+[<a href="?rerun">Re-run now</a>]
+<?php	} else { ?>
+[Running...]
+<?php	} ?>
+</div>
+
 <?
 $db = fopen('logs/pu.db', 'r');
 if ($db === false) {
@@ -36,5 +66,6 @@ for ($i = 0; $i < count($lines); $i++) {
 }
 print "</ul>\n";
 ?>
+
 </body>
 </html>
