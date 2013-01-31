@@ -2,9 +2,50 @@
 
 set -e
 
-CONTEXT_NAME=autotest
-BASE_INSTALL="dynacase-platform dynacase-webdesk"
-ADDON_INSTALL="dynacase-admin dynacase-admin-docadmin-ui dynacase-admin-uis dynacase-app-switcher dynacase-book dynacase-book dynacase-ckeditor-plugins dynacase-dashboard-ui dynacase-dashboard-widgets dynacase-document-grid-test dynacase-document-grid-ui dynacase-fileconnector dynacase-mailconnector dynacase-networkuser dynacase-onefam dynacase-onefam-ext dynacase-search-criteria-UI dynacase-search-criteria-test dynacase-tags dynacase-tags-test dynacase-tags-ui dynacase-thesaurus dynacase-url dynacase-workspace"
+if [ -z "$AUTOTEST_ROOT" ]; then
+	echo "Undefined AUTOTEST_ROOT environment variable!"
+	exit 1
+fi
+
+CONTEXT_NAME=iComplet
+
+INSTALL_32="
+	dynacase-admin \
+	dynacase-admin-uis \
+	dynacase-app-switcher \
+	dynacase-book \
+	dynacase-ckeditor-installer \
+	dynacase-ckeditor-plugins \
+	dynacase-contacts \
+	dynacase-dashboard-ui \
+	dynacase-dashboard-widgets \
+	dynacase-datajs \
+	dynacase-document-grid-test \
+	dynacase-document-grid-ui \
+	dynacase-extjs-installer \
+	dynacase-extui \
+	dynacase-fileconnector \
+	dynacase-freeevent \
+	dynacase-jquery-dataTables-installer \
+	dynacase-jquery-installer \
+	dynacase-jquery-ui-installer \
+	dynacase-json \
+	dynacase-mailconnector \
+	dynacase-networkuser \
+	dynacase-onefam \
+	dynacase-onefam-ext \
+	dynacase-search-criteria-test \
+	dynacase-search-criteria-UI \
+	dynacase-tags \
+	dynacase-tags-test \
+	dynacase-tags-ui \
+	dynacase-theme \
+	dynacase-thesaurus \
+	dynacase-url \
+	dynacase-webdesk-services \
+	dynacase-webdesk-ui \
+	dynacase-workspace \
+"
 
 # -- Cleanup context
 
@@ -43,27 +84,7 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/params.xml"
 </wiff>
 EOF
 
-# -- Install dynacase-platform 3.1
-
-cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
-<?xml version="1.0"?>
-<contexts>
-  <context name="${CONTEXT_NAME}" root="${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}" url="" register="unregistered">
-    <description/>
-    <modules>
-    </modules>
-    <repositories>
-      <access use="i31"/>
-    </repositories>
-  </context>
-</contexts>
-EOF
-
-for MODULE in $BASE_INSTALL; do
-	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
-done
-
-# -- Upgrade to dynacase-core 3.2
+# -- Install dynacase-platform 3.2
 
 cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 <?xml version="1.0"?>
@@ -79,7 +100,7 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 </contexts>
 EOF
 
-"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module upgrade --unattended dynacase-core
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
 
 # -- Run DCPTEST
@@ -88,8 +109,6 @@ EOF
 
 # -- Install additionnal modules
 
-if [ -n "$ADDON_INSTALL" ]; then
-	for MODULE in $ADDON_INSTALL; do
-		"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
-	done
-fi
+for MODULE in $INSTALL_32; do
+	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
+done

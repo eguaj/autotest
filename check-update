@@ -2,7 +2,8 @@
 
 set -e
 
-AUTOTEST_ROOT=/var/www/autotest
+AUTOTEST_ROOT=$(dirname "$0")
+AUTOTEST_ROOT=$(cd "$AUTOTEST_ROOT" && pwd -P)
 
 DB_FILE="${AUTOTEST_ROOT}/check-update.db"
 

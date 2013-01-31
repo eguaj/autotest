@@ -2,9 +2,28 @@
 
 set -e
 
-CONTEXT_NAME=autotest
-BASE_INSTALL="dynacase-core dynacase-core-test"
-ADDON_INSTALL="dynacase-admin dynacase-admin-docadmin-ui dynacase-admin-uis dynacase-app-switcher dynacase-book dynacase-book dynacase-ckeditor-plugins dynacase-dashboard-ui dynacase-dashboard-widgets dynacase-document-grid-test dynacase-document-grid-ui dynacase-fileconnector dynacase-mailconnector dynacase-networkuser dynacase-onefam dynacase-onefam-ext dynacase-search-criteria-UI dynacase-search-criteria-test dynacase-tags dynacase-tags-test dynacase-tags-ui dynacase-thesaurus dynacase-url dynacase-workspace"
+if [ -z "$AUTOTEST_ROOT" ]; then
+	echo "Undefined AUTOTEST_ROOT environment variable!"
+	exit 1
+fi
+
+CONTEXT_NAME="uSimple"
+
+INSTALL_31="
+	dynacase-webdesk \
+	dynacase-zoo \
+"
+
+INSTALL_32="
+	dynacase-admin \
+	dynacase-admin-uis \
+	dynacase-app-switcher \
+	dynacase-contacts \
+	dynacase-onefam \
+	dynacase-onefam-ext \
+	dynacase-webdesk-services \
+	dynacase-webdesk-ui \
+"
 
 # -- Cleanup context
 
@@ -12,7 +31,6 @@ if [ -d "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}" ]; then
 	rm -Rf "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}"
 fi
 mkdir -p "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}"
-chown www-data: "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}"
 
 PGSERVICE=${CONTEXT_NAME} psql -f - <<EOF
 DROP SCHEMA "public" CASCADE;
@@ -26,7 +44,8 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/params.xml"
 <wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="AGPL3" lang="fr|en">
   <repositories>
     <access name="i32" description="" protocol="http" host="eec.corp.anakeen.com" path="/anakeen/repo/integration/3.2/webinst/" default="no" authenticated="no" login="" password="" label=""/>
-    <access name="i31" description="" protocol="http" host="eec.corp.anakeen.com" path="/anakeen/repo/integration/3.1/webinst/" default="no" authenticated="no" login="" password="" label=""/>  </repositories>
+    <access name="i31" description="" protocol="http" host="eec.corp.anakeen.com" path="/anakeen/repo/integration/3.1/webinst/" default="no" authenticated="no" login="" password="" label=""/>
+  </repositories>
   <parameters>
     <param name="wiff-update-host" value="http://eec.anakeen.com"/>
     <param name="wiff-update-path" value="/public/control/"/>
@@ -43,7 +62,7 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/params.xml"
 </wiff>
 EOF
 
-# -- Install dynacase-core 3.2
+# -- Install dynacase-platform 3.1
 
 cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 <?xml version="1.0"?>
@@ -53,15 +72,24 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
     <modules>
     </modules>
     <repositories>
-      <access use="i32"/>
+      <access use="i31"/>
     </repositories>
   </context>
 </contexts>
 EOF
 
-for MODULE in $BASE_INSTALL; do
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform
+
+for MODULE in $INSTALL_31; do
 	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
 done
+
+# -- Upgrade to dynacase-core 3.2
+
+sed -i'' -e 's|<access use="i31"/>|<access use="i32"/>|' "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module upgrade --unattended dynacase-core
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
 
 # -- Run DCPTEST
 
@@ -69,8 +97,6 @@ done
 
 # -- Install additionnal modules
 
-if [ -n "$ADDON_INSTALL" ]; then
-	for MODULE in $ADDON_INSTALL; do
-		"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
-	done
-fi
+for MODULE in $INSTALL_32; do
+	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
+done

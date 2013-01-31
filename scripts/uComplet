@@ -1,0 +1,140 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$AUTOTEST_ROOT" ]; then
+	echo "Undefined AUTOTEST_ROOT environment variable!"
+	exit 1
+fi
+
+CONTEXT_NAME=uComplet
+
+INSTALL_31="
+	dynacase-book \
+	dynacase-extjs \
+	dynacase-extui \
+	dynacase-fckeditor \
+	dynacase-fileconnector \
+	dynacase-jquery \
+	dynacase-mailconnector \
+	dynacase-networkuser \
+	dynacase-theme \
+	dynacase-thesaurus \
+	dynacase-url \
+	dynacase-webdesk \
+	dynacase-workspace \
+"
+
+INSTALL_32="
+	dynacase-admin \
+	dynacase-admin-uis \
+	dynacase-app-switcher \
+	dynacase-book \
+	dynacase-ckeditor-installer \
+	dynacase-ckeditor-plugins \
+	dynacase-contacts \
+	dynacase-dashboard-ui \
+	dynacase-dashboard-widgets \
+	dynacase-datajs \
+	dynacase-document-grid-test \
+	dynacase-document-grid-ui \
+	dynacase-extjs-installer \
+	dynacase-extui \
+	dynacase-fileconnector \
+	dynacase-freeevent \
+	dynacase-jquery-dataTables-installer \
+	dynacase-jquery-installer \
+	dynacase-jquery-ui-installer \
+	dynacase-json \
+	dynacase-mailconnector \
+	dynacase-networkuser \
+	dynacase-onefam \
+	dynacase-onefam-ext \
+	dynacase-search-criteria-test \
+	dynacase-search-criteria-UI \
+	dynacase-tags \
+	dynacase-tags-test \
+	dynacase-tags-ui \
+	dynacase-theme \
+	dynacase-thesaurus \
+	dynacase-url \
+	dynacase-webdesk-services \
+	dynacase-webdesk-ui \
+	dynacase-workspace \
+"
+
+# -- Cleanup context
+
+if [ -d "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}" ]; then
+	rm -Rf "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}"
+fi
+mkdir -p "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}"
+
+PGSERVICE=${CONTEXT_NAME} psql -f - <<EOF
+DROP SCHEMA "public" CASCADE;
+CREATE SCHEMA "public";
+DROP SCHEMA "family" CASCADE;
+DROP SCHEMA "dav" CASCADE;
+EOF
+
+cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/params.xml"
+<?xml version="1.0"?>
+<wiff version="0.0.1" release="1" author="anakeen, www.anakeen.com" license="AGPL3" lang="fr|en">
+  <repositories>
+    <access name="i32" description="" protocol="http" host="eec.corp.anakeen.com" path="/anakeen/repo/integration/3.2/webinst/" default="no" authenticated="no" login="" password="" label=""/>
+    <access name="i31" description="" protocol="http" host="eec.corp.anakeen.com" path="/anakeen/repo/integration/3.1/webinst/" default="no" authenticated="no" login="" password="" label=""/>
+  </repositories>
+  <parameters>
+    <param name="wiff-update-host" value="http://eec.anakeen.com"/>
+    <param name="wiff-update-path" value="/public/control/"/>
+    <param name="wiff-update-file" value="dynacase-control-current.tar.gz"/>
+    <param name="wiff-update-login" value=""/>
+    <param name="wiff-update-password" value=""/>
+    <param name="use-proxy" value="no"/>
+    <param name="proxy-host" value=""/>
+    <param name="proxy-port" value=""/>
+    <param name="proxy-username" value=""/>
+    <param name="proxy-password" value=""/>
+    <param name="auto-configuration-sender-interval" value="30"/>
+  </parameters>
+</wiff>
+EOF
+
+# -- Install dynacase-platform 3.1
+
+cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
+<?xml version="1.0"?>
+<contexts>
+  <context name="${CONTEXT_NAME}" root="${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}" url="" register="unregistered">
+    <description/>
+    <modules>
+    </modules>
+    <repositories>
+      <access use="i31"/>
+    </repositories>
+  </context>
+</contexts>
+EOF
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform
+
+for MODULE in $INSTALL_31; do
+	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
+done
+
+# -- Upgrade to dynacase-core 3.2
+
+sed -i'' -e 's|<access use="i31"/>|<access use="i32"/>|' "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module upgrade --unattended dynacase-core
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
+
+# -- Run DCPTEST
+
+"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec "$(which phpunit)" --stop-on-error DCPTEST/PU_dcp.php
+
+# -- Install additionnal modules
+
+for MODULE in $INSTALL_32; do
+	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
+done

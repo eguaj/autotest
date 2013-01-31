@@ -1,8 +1,12 @@
 #!/bin/bash
 
 SETUID=33
-AUTOTEST_ROOT=/var/www/autotest
-AUTOTEST_RUN=""
+AUTOTEST_ROOT=$(dirname "$0")
+AUTOTEST_ROOT=$(cd "$AUTOTEST_ROOT" && pwd -P)
+AUTOTEST_RUN="uBasic uSimple uComplet iComplet"
+
+export AUTOTEST_ROOT
+export AUTOTEST_RUN
 
 if [ -f "$AUTOTEST_ROOT/autotest.conf" ]; then
 	. "$AUTOTEST_ROOT/autotest.conf"
@@ -12,9 +16,6 @@ if [ "$(id -u)" != "${SETUID}" ]; then
 	printf "Script must be run under UID '%s'.\n" "${SETUID}"
 	exit 1
 fi
-
-export AUTOTEST_ROOT
-export AUTOTEST_ADDON_INSTALL
 
 if [ ! -d "${AUTOTEST_ROOT}/logs" ]; then
 	mkdir -p "${AUTOTEST_ROOT}/logs"
@@ -42,29 +43,33 @@ function install_control {
 }
 
 function autotest_run {
-	for RUNID in $AUTOTEST_RUN; do
+	while [ $# -gt 0 ]; do
+		SCRIPT=$(echo "$1" | sed -e 's:/:_:g')
 		TS=$(date +%Y-%m-%dT%H:%M:%S)
-		OUTPUT="${AUTOTEST_ROOT}/logs/run_${RUNID}_${TS}.log"
+		OUTPUT="${AUTOTEST_ROOT}/logs/${SCRIPT}_${TS}.log"
 
 		(
-			"${AUTOTEST_ROOT}/run_${RUNID}"
+			"${AUTOTEST_ROOT}/scripts/${SCRIPT}"
 			RET=$?
 			if [ $RET -ne 0 ]; then
-				echo "${TS} ${RUNID} FAILED" >> "${AUTOTEST_ROOT}/logs/pu.db"
+				echo "${TS} ${SCRIPT} FAILED" >> "${AUTOTEST_ROOT}/logs/pu.db"
 			else
-				echo "${TS} ${RUNID} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
+				echo "${TS} ${SCRIPT} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
 			fi
 		) 2>&1 | timestamplog | tee "$OUTPUT" $REDIR_NULL
+		shift
 	done
 }
 
-case "$1" in
-	"install-control")
-		install_control
-		;;
-	*)
-		autotest_run
-		;;
-esac
+if [ "$1" = "--install-control" ]; then
+	install_control
+	shift
+fi
+
+if [ $# -gt 0 ]; then
+	autotest_run $@
+else
+	autotest_run $AUTOTEST_RUN
+fi
 
 rm "${AUTOTEST_ROOT}/autotest.lock"
