@@ -30,13 +30,19 @@ if [ "${LOCK_PID}" != "$$" ]; then
 	exit 2
 fi
 
+function on_exit {
+	rm "${AUTOTEST_ROOT}/autotest.lock"
+}
+
+trap on_exit EXIT
+
 function timestamplog {
 	perl -MPOSIX -ne 'BEGIN{select STDOUT;$|=1;$ts=time()}printf("%s +%s %s",strftime("%Y-%m-%dT%H:%M:%S",localtime()),time()-$ts,$_);'
 }
 
-REDIR_NULL=""
+REDIR="/dev/stdout"
 if [ ! -t 0 ]; then
-	REDIR_NULL="> /dev/null"
+	REDIR="/dev/null"
 fi
 
 function install_control {
@@ -58,7 +64,7 @@ function autotest_run {
 			else
 				echo "${TS} ${SCRIPT} SUCCEEDED" >> "${AUTOTEST_ROOT}/logs/pu.db"
 			fi
-		) 2>&1 | timestamplog | tee "$OUTPUT" $REDIR_NULL
+		) 2>&1 | timestamplog | tee "$OUTPUT" > "$REDIR"
 		shift
 	done
 }
@@ -73,5 +79,3 @@ if [ $# -gt 0 ]; then
 else
 	autotest_run $AUTOTEST_RUN
 fi
-
-rm "${AUTOTEST_ROOT}/autotest.lock"

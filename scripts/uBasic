@@ -7,6 +7,10 @@ if [ -z "$AUTOTEST_ROOT" ]; then
 	exit 1
 fi
 
+if [ -f "$AUTOTEST_ROOT/scripts/common" ]; then
+	. "$AUTOTEST_ROOT/scripts/common"
+fi
+
 CONTEXT_NAME="uBasic"
 
 INSTALL_31="
@@ -57,6 +61,8 @@ EOF
 
 # -- Install dynacase-platform 3.1
 
+set_php_ini_dcp_31
+
 cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 <?xml version="1.0"?>
 <contexts>
@@ -78,6 +84,8 @@ for MODULE in $INSTALL_31; do
 done
 
 # -- Upgrade to dynacase-core 3.2
+
+set_php_ini_dcp_32
 
 sed -i'' -e 's|<access use="i31"/>|<access use="i32"/>|' "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 

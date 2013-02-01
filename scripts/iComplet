@@ -7,6 +7,10 @@ if [ -z "$AUTOTEST_ROOT" ]; then
 	exit 1
 fi
 
+if [ -f "$AUTOTEST_ROOT/scripts/common" ]; then
+	. "$AUTOTEST_ROOT/scripts/common"
+fi
+
 CONTEXT_NAME=iComplet
 
 INSTALL_32="
@@ -29,7 +33,7 @@ INSTALL_32="
 	dynacase-jquery-dataTables-installer \
 	dynacase-jquery-installer \
 	dynacase-jquery-ui-installer \
-	dynacase-json \
+	dynacase-json2 \
 	dynacase-mailconnector \
 	dynacase-networkuser \
 	dynacase-onefam \
@@ -85,6 +89,8 @@ cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/params.xml"
 EOF
 
 # -- Install dynacase-platform 3.2
+
+set_php_ini_dcp_32
 
 cat <<EOF > "${AUTOTEST_ROOT}/dynacase-control/conf/contexts.xml"
 <?xml version="1.0"?>
