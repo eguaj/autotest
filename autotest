@@ -4,9 +4,11 @@ SETUID=33
 AUTOTEST_ROOT=$(dirname "$0")
 AUTOTEST_ROOT=$(cd "$AUTOTEST_ROOT" && pwd -P)
 AUTOTEST_RUN="uBasic uSimple uComplet iComplet"
+PATH="$AUTOTEST_ROOT/bin:$PATH"
 
 export AUTOTEST_ROOT
 export AUTOTEST_RUN
+export PATH
 
 if [ -f "$AUTOTEST_ROOT/autotest.conf" ]; then
 	. "$AUTOTEST_ROOT/autotest.conf"

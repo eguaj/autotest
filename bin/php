@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -e
+
+if [ -n "$_PHP_INI_WRAPPER" ]; then
+	echo "Oops! Looks like I'm calling myself?" 1>&2
+	exit 1
+fi
+
+MY_PATH=$(dirname "$0")
+MY_PATH=$(cd "$MY_PATH" && pwd -P)
+
+PATH=${PATH##$MY_PATH}
+export PATH
+
+REAL_PHP_INI=$(php --ini | sed -n -e 's/^Loaded Configuration File:[[:space:]][[:space:]]*//p')
+TMP_INI=$(mktemp -t php.ini.XXXXXX)
+
+if [ -n "$PHP_INI" ]; then
+	cat "$REAL_PHP_INI" "$PHP_INI" > "$TMP_INI"
+	REAL_PHP_INI=$TMP_INI
+fi
+
+_PHP_INI_WRAPPER=1
+export _PHP_INI_WRAPPER
+
+exec php -c "$REAL_PHP_INI" "$@"
