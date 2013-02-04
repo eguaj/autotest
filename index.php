@@ -21,6 +21,24 @@ if (isset($_REQUEST['rerun'])) {
 		header('Location: ' . $_SERVER['PHP_SELF']);
 		exit(0);
 	}
+} else if (isset($_REQUEST['deleteall'])) {
+	if ($isRunning) {
+		$error = sprintf("Autotest is running (pid = %s)", trim($pid));
+		header('Location: ' . $_SERVER['PHP_SELF'] . '?error=' . urlencode($error));
+		exit(0);
+	}
+	$dir = opendir('logs');
+	if ($dir === false) {
+		$error = sprintf("Error opening 'logs' dir.");
+		header('Location: ' . $_SERVER['PHP_SELF'] . '?error=' . urlencode($error));
+		exit(0);
+	}
+	while (($file = readdir($dir)) !== false) {
+		if ($file == '.' || $file == '..') {
+			continue;
+		}
+		unlink('logs' . DIRECTORY_SEPARATOR . $file);
+	}
 }
 ?>
 <!DOCTYPE HTML>
@@ -94,6 +112,10 @@ for ($i = 0; $i < count($lines); $i++) {
 }
 print "</ul>\n";
 ?>
+</div>
+
+<div>
+[<a href="?deleteall" title="Delete all logs">Delete all logs</a>]
 </div>
 
 </body>
