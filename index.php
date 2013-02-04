@@ -56,6 +56,12 @@ body {
 .succeeded {
 	color: green;
 }
+#results {
+	margin: 1em;
+}
+.monospace {
+	font-family: monospace;
+}
 </style>
 <body>
 
@@ -81,7 +87,7 @@ body {
 
 <div id="results">
 
-<?
+<?php
 $db = fopen('logs/pu.db', 'r');
 if ($db === false) {
 	print sprintf("<h1>Error opening 'pu.db' for reading.</h1>\n");
@@ -93,8 +99,10 @@ while ($line = fgets($db)) {
 	$lines []= $line;
 }
 $lines = array_reverse($lines);
+?>
 
-print "<ul>\n";
+<table>
+<?php
 for ($i = 0; $i < count($lines); $i++) {
 	$line = $lines[$i];
 	if (!preg_match('/^(?<time>[0-9T:-]+)\s(?<script>.+?)\s(?<status>[a-zA-Z]+)$/', $line, $m)) {
@@ -102,17 +110,21 @@ for ($i = 0; $i < count($lines); $i++) {
 	}
 	$url = urlencode(sprintf("%s_%s.log", $m['script'], $m['time']));
 	$status_class = ($m['status'] == 'FAILED') ? 'failed' : 'succeeded';
-	print sprintf("<li>");
-	print sprintf("%s <span class=\"%s\">%s</span>", $m['time'], $status_class, $m['status']);
-	print sprintf("&nbsp;<a href=\"logs/%s\" title=\"View log\">%s</a> ", $url, urlencode($m['script']));
-	print sprintf("[");
-	print sprintf("<a href=\"?rerun=%s\" title=\"Re-run single script\">r</a>", urlencode($m['script']));
-	print sprintf(",");
-	print sprintf("<a href=\"contexts/%s/\" target=\"_blank\" title=\"Open context\">o</a>]", urlencode($m['script']));
-	print sprintf("</li>\n");
-}
-print "</ul>\n";
 ?>
+	<tr>
+		<td><?php print($m['time']) ?></td>
+		<td><span class="<?php print($status_class) ?>"><?php print($m['status']) ?></span></td>
+		<td><a href="<?php print('logs/' . $url) ?>" title="View log"><?php print(htmlspecialchars($m['script'])) ?></a></td>
+		<td>(</td>
+		<td><a class="monospace" href="?rerun=<?php print(urlencode($m['script'])) ?>" title="Re-run single script">r</a></td>
+		<td>,</td>
+		<td><a class="monospace" href="<?php print('contexts/' . urlencode($m['script']) . '/') ?>" title="Open context">O</a></td>
+		<td>)</td>
+	</tr>
+<?php
+}
+?>
+</table>
 </div>
 
 <div id="buttonbar-bottom">
