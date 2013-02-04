@@ -71,13 +71,14 @@ body {
 </pre>
 </div>
 
-<div id="buttonbar">
+<div id="buttonbar-top">
 <?php	if (!$isRunning) { ?>
 [<a href="?rerun">Re-run now</a>]
 <?php	} else { ?>
 [Running...]
 <?php	} ?>
 </div>
+
 <div id="results">
 
 <?
@@ -114,8 +115,10 @@ print "</ul>\n";
 ?>
 </div>
 
-<div>
+<div id="buttonbar-bottom">
+<?php	if (!$isRunning) { ?>
 [<a href="?deleteall" title="Delete all logs">Delete all logs</a>]
+<?php	} ?>
 </div>
 
 </body>
