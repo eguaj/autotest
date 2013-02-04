@@ -63,8 +63,19 @@ body {
 .monospace {
 	font-family: monospace;
 }
+#hostname-watermark {
+	position: fixed;
+	top: 1em;
+	right: 1em;
+	z-index: -1;
+	font-family: monospace;
+	font-size: 3em;
+	color: lightgray;
+}
 </style>
 <body>
+
+<div id="hostname-watermark"><?php print(htmlspecialchars($hostname)) ?></div>
 
 <div id="error" class="failed">
 <pre>
