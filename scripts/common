@@ -49,3 +49,8 @@ function filterout_crontab {
 	' \
 	| crontab -
 }
+
+function final_32 {
+	(echo "<?php"; php-ini-set "$(get_php_ini_dcp_32)") > "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}/config/local-dbaccess.php"
+	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec ./wsh.php --api=set_param --appname=CORE --param=CORE_CLIENT --value="${CONTEXT_NAME}@$(hostname)"
+}
