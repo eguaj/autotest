@@ -110,6 +110,8 @@ EOF
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
 
+filterout_crontab
+
 # -- Run DCPTEST
 
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" exec "$(which phpunit)" --stop-on-error DCPTEST/PU_dcp.php

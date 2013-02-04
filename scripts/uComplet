@@ -125,6 +125,8 @@ EOF
 
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-platform
 
+filterout_crontab
+
 for MODULE in $INSTALL_31; do
 	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
 done
@@ -137,6 +139,8 @@ sed -i'' -e 's|<access use="i31"/>|<access use="i32"/>|' "${AUTOTEST_ROOT}/dynac
 
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module upgrade --unattended dynacase-core
 "${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended dynacase-core-test
+
+filterout_crontab
 
 # -- Run DCPTEST
 

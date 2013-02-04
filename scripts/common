@@ -36,3 +36,16 @@ function set_php_ini_dcp_32 {
 	export PHP_INI
 }
 
+function filterout_crontab {
+	crontab -l \
+	| perl -ne '
+		BEGIN { $in = "" }
+		if (m/^# (BEGIN|END):(.*)$/) {
+			if ($1 eq "BEGIN") { $in = $2 }
+			elsif ($1 eq "END" && $2 eq $in) { $in = "" }
+		} else {
+			print if($in eq "")
+		}
+	' \
+	| crontab -
+}
