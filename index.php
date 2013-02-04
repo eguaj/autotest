@@ -3,7 +3,8 @@
 $pid = file_get_contents("autotest.lock");
 $isRunning = ($pid !== false);
 $error = isset($_REQUEST['error']) ? $_REQUEST['error'] : '';
-$uptime = shell_exec("uptime");
+$uptime = trim(shell_exec("uptime"));
+$hostname = gethostname();
 
 if (isset($_REQUEST['rerun'])) {
 	if ($isRunning) {
@@ -73,7 +74,7 @@ body {
 
 <div id="uptime">
 <pre>
-<?php	print(htmlspecialchars($uptime)) ?>
+<a href="<?php print($_SERVER['PHP_SELF']) ?>" title="Reload"><?php print(htmlspecialchars($hostname)) ?></a> | <?php print(htmlspecialchars($uptime)) ?>
 </pre>
 </div>
 
