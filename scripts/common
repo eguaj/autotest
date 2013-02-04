@@ -4,27 +4,35 @@ function php_version {
 	php -r "print(preg_replace('/^(\d+\.\d+).*$/', '\1', PHP_VERSION));"
 }
 
-function set_php_ini_dcp_31 {
-	export PHP_INI=""
-	PHP_VERSION=$(php_version)
+function get_php_ini_dcp_31 {
+	PHP_VERSION=$(PHP_INI="" php_version)
 	if [ "$PHP_VERSION" = "5.3" ]; then
-		PHP_INI="$AUTOTEST_ROOT/scripts/dcp_31_php_53.ini"
+		echo "$AUTOTEST_ROOT/scripts/dcp_31_php_53.ini"
 	fi
 	if [ "$PHP_VERSION" = "5.4" ]; then
-		PHP_INI="$AUTOTEST_ROOT/scripts/dcp_31_php_54.ini"
+		echo "$AUTOTEST_ROOT/scripts/dcp_31_php_54.ini"
 	fi
+}
+
+function get_php_ini_dcp_32 {
+	PHP_VERSION=$(PHP_INI="" php_version)
+	if [ "$PHP_VERSION" = "5.3" ]; then
+		echo "$AUTOTEST_ROOT/scripts/dcp_32_php_53.ini"
+	fi
+	if [ "$PHP_VERSION" = "5.4" ]; then
+		echo "$AUTOTEST_ROOT/scripts/dcp_32_php_54.ini"
+	fi
+}
+
+function set_php_ini_dcp_31 {
+	export PHP_INI=""
+	PHP_INI=$(get_php_ini_dcp_31)
 	export PHP_INI
 }
 
 function set_php_ini_dcp_32 {
 	export PHP_INI=""
-	PHP_VERSION=$(php_version)
-	if [ "$PHP_VERSION" = "5.3" ]; then
-		PHP_INI="$AUTOTEST_ROOT/scripts/dcp_32_php_53.ini"
-	fi
-	if [ "$PHP_VERSION" = "5.4" ]; then
-		PHP_INI="$AUTOTEST_ROOT/scripts/dcp_32_php_54.ini"
-	fi
+	PHP_INI=$(get_php_ini_dcp_32)
 	export PHP_INI
 }
 

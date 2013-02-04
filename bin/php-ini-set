@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+$ini = parse_ini_file($argv[1], false, INI_SCANNER_RAW);
+if ($ini === false) {
+	error_log("Error reading INI from '%s'.", $argv[1]);
+	exit(1);
+}
+foreach ($ini as $k => $v) {
+	if ($k == 'error_reporting') {
+	} else if (preg_match('/^(true|on|yes)$/i', $v)) {
+		$v = "true";
+	} else if (preg_match('/^(false|off|no|none)$/i', $v)) {
+		$v = "false";
+	} else {
+		$v = '"' . $v . '"';
+	}
+	printf("ini_set(\"%s\", %s);\n", $k, $v);
+}
+exit(0);

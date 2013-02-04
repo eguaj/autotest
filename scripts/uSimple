@@ -108,3 +108,5 @@ sed -i'' -e 's|<access use="i31"/>|<access use="i32"/>|' "${AUTOTEST_ROOT}/dynac
 for MODULE in $INSTALL_32; do
 	"${AUTOTEST_ROOT}/dynacase-control/wiff" context "${CONTEXT_NAME}" module install --unattended "$MODULE"
 done
+
+(echo "<?php"; php-ini-set "$(get_php_ini_dcp_32)") > "${AUTOTEST_ROOT}/contexts/${CONTEXT_NAME}/config/local-dbaccess.php"
