@@ -89,7 +89,7 @@ for ($i = 0; $i < count($lines); $i++) {
 	print sprintf("[");
 	print sprintf("<a href=\"?rerun=%s\" title=\"Re-run single script\">r</a>", urlencode($m['script']));
 	print sprintf(",");
-	print sprintf("<a href=\"contexts/%s\" target=\"_blank\" title=\"Open context\">o</a>]", urlencode($m['script']));
+	print sprintf("<a href=\"contexts/%s/\" target=\"_blank\" title=\"Open context\">o</a>]", urlencode($m['script']));
 	print sprintf("</li>\n");
 }
 print "</ul>\n";
