@@ -49,6 +49,7 @@ INSTALL_32="
 	dynacase-webdesk-services \
 	dynacase-webdesk-ui \
 	dynacase-workspace \
+	dynacase-zoo \
 "
 
 # -- Cleanup context

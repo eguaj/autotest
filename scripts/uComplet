@@ -27,6 +27,7 @@ INSTALL_31="
 	dynacase-url \
 	dynacase-webdesk \
 	dynacase-workspace \
+	dynacase-zoo \
 "
 
 INSTALL_32="
